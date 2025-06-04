@@ -1,0 +1,14 @@
+import React from 'react';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import Tabs from './Tabs';
+
+const Drawer = createDrawerNavigator();
+
+export default function DrawerNavigator() {
+  return (
+    <Drawer.Navigator screenOptions={{ headerShown: false }}>
+      <Drawer.Screen name="HomeTabs" component={Tabs} />
+      {/* Aap yahan aur Drawer screens add kar sakte hain */}
+    </Drawer.Navigator>
+  );
+}
