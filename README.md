@@ -1,4 +1,4 @@
-AgroRover – AI-Powered Smart Farming Rover
+🌱 AgroRover – AI-Powered Smart Farming Rover
 AgroRover is an AI-based autonomous farming assistant designed to revolutionize precision agriculture. Built on Raspberry Pi with a 3D-printed robotic arm, this rover performs soil monitoring, plant health analysis, and remote field inspection through a mobile app interface.
 
 🚜 Features
