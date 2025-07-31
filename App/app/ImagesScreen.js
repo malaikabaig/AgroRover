@@ -8,10 +8,10 @@ import {
   View,
 } from 'react-native';
 
+import { PI_STREAM_IP } from '@env';
 import HeaderBar from '../components/headerBar';
 
-const API_BASE_URL = 'http://10.13.68.178:5000'; // Apna backend IP yahan daalein
-
+const API_BASE_URL = `http://${PI_STREAM_IP}:5000`;
 export default function ImagesScreen() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);

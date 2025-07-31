@@ -14,13 +14,14 @@ const Drawer = createDrawerNavigator();
 export default function DrawerNavigator({ setIsLoggedIn }) {
   return (
     <Drawer.Navigator
+      initialRouteName="HomeTabs"
       drawerContent={(props) => (
         <CustomDrawerContent {...props} setIsLoggedIn={setIsLoggedIn} />
       )}
       screenOptions={{ headerShown: false }}
     >
       <Drawer.Screen name="HomeTabs" component={Tabs} />
-      <Drawer.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Drawer.Screen name="Prof" component={ProfileScreen} />
       <Drawer.Screen
         name="LiveControlsSettings"
         component={LiveControlsScreen}

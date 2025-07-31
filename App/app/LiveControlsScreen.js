@@ -1,3 +1,4 @@
+import { PI_STREAM_IP } from '@env';
 import { useState } from 'react';
 import {
   Animated,
@@ -11,10 +12,10 @@ import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
 import Joystick from '../components/Joystick';
 
-const SERVER = 'http://192.168.238.1:5000';
+const API_BASE_URL = `http://${PI_STREAM_IP}:5000`;
 const { width, height } = Dimensions.get('window');
 
-export default function LiveControlsScreen() {
+export default function LiveControlsScreen({ navigation }) {
   const [bannerMsg, setBannerMsg] = useState('');
   const bannerOpacity = useState(new Animated.Value(0))[0];
 
@@ -43,9 +44,11 @@ export default function LiveControlsScreen() {
       else if (x < -0.5) direction = 'left';
       else if (x > 0.5) direction = 'right';
     }
+
     const endpoint = direction === 'stop' ? '/stop' : '/move';
     const body = direction === 'stop' ? {} : { direction };
-    fetch(`${SERVER}${endpoint}`, {
+
+    fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -60,7 +63,7 @@ export default function LiveControlsScreen() {
   };
 
   const handleArm = (motor, direction) => {
-    fetch(`${SERVER}/arm-control`, {
+    fetch(`${API_BASE_URL}/arm-control`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ motor, direction }),
@@ -76,25 +79,29 @@ export default function LiveControlsScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar title="Live Controls" />
+      <HeaderBar title="Live Controls" onBack={() => navigation.goBack()} />
+
       {bannerMsg !== '' && (
         <Animated.View style={[styles.banner, { opacity: bannerOpacity }]}>
           <Text style={styles.bannerText}>{bannerMsg}</Text>
         </Animated.View>
       )}
+
       <View style={styles.videoContainer}>
         <WebView
-          source={{ uri: `${SERVER}/video` }}
+          source={{ uri: `${API_BASE_URL}/video` }}
           style={StyleSheet.absoluteFillObject}
           onError={() => showBanner('Video not available')}
           allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction={false}
         />
       </View>
+
       <View style={styles.controlsContainer} pointerEvents="box-none">
         <View style={styles.joyArea} pointerEvents="box-none">
           <Joystick size={120} knobSize={60} onDirection={handleDirection} />
         </View>
+
         <View style={styles.armArea} pointerEvents="box-none">
           <Text style={styles.sectionTitle}>Arm Controls</Text>
           {[1, 2, 3].map((motor) => (

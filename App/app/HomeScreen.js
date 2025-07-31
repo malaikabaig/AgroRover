@@ -1,9 +1,10 @@
+import { PI_STREAM_IP } from '@env';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Button } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
 
-const API_BASE_URL = 'http://192.168.34.:5000'; // Apna backend IP
+const API_BASE_URL = `http://${PI_STREAM_IP}:5000`;
 
 export default function HomeScreen() {
   const handleCapture = async () => {

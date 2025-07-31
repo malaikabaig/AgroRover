@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import {
   Alert,
@@ -12,6 +13,7 @@ import HeaderBar from '../components/headerBar';
 export default function ContactUs() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const navigation = useNavigation(); // <-- use navigation hook
 
   const handleSubmit = () => {
     if (!email || !message) {
@@ -26,7 +28,8 @@ export default function ContactUs() {
 
   return (
     <>
-      <HeaderBar title="Contact Us" />
+      {/* Passing onBack to HeaderBar */}
+      <HeaderBar title="Contact Us" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.label}>Email:</Text>
         <TextInput

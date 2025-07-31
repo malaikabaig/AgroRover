@@ -1,10 +1,14 @@
+import { useNavigation } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import HeaderBar from '../components/headerBar';
 
 export default function AboutUs() {
+  const navigation = useNavigation(); // <-- use navigation hook
+
   return (
     <>
-      <HeaderBar title="About AgroRover" />
+      {/* Passing onBack to HeaderBar */}
+      <HeaderBar title="About AgroRover" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.text}>
           AgroRover is an AI-based automated farming rover project built using

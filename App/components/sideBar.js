@@ -1,15 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-export default function CustomDrawerContent({ setIsLoggedIn, ...props }) {
-  const router = useRouter();
-
+export default function CustomDrawerContent({
+  setIsLoggedIn,
+  navigation,
+  ...props
+}) {
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('token'); // Token remove karo
-    setIsLoggedIn(false); // Login state reset karo
-    router.replace('/LoginScreen'); // LoginScreen route par redirect karo
+    await AsyncStorage.removeItem('token');
+    setIsLoggedIn(false);
+    navigation.navigate('Login'); // 👈 Corrected from 'LoginScreen'
   };
 
   return (
@@ -29,35 +30,36 @@ export default function CustomDrawerContent({ setIsLoggedIn, ...props }) {
 
         <DrawerItem
           label="Profile"
-          onPress={() => router.push('/ProfileScreen')}
+          onPress={() => navigation.navigate('Prof')}
         />
         <DrawerItem
           label="Live Controls"
-          onPress={() => router.push('/LiveControlsSettings')}
+          onPress={() => navigation.navigate('LiveControlsSettings')}
         />
         <DrawerItem
           label="Video Settings"
-          onPress={() => router.push('/VideoSettings')}
+          onPress={() => navigation.navigate('VideoSettings')}
         />
         <DrawerItem
           label="Contact Us"
-          onPress={() => router.push('/ContactUs')}
+          onPress={() => navigation.navigate('ContactUs')}
         />
-        <DrawerItem label="About Us" onPress={() => router.push('/AboutUs')} />
+        <DrawerItem
+          label="About Us"
+          onPress={() => navigation.navigate('AboutUs')}
+        />
       </View>
 
       <View>
         <DrawerItem
           label="Privacy Policy"
-          onPress={() => router.push('/PrivacyPolicy')}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
         />
         <DrawerItem
           label="Terms & Services"
-          onPress={() => router.push('/TermsServices')}
+          onPress={() => navigation.navigate('TermsServices')}
         />
-        {/* Sign Out Drawer Item */}
         <DrawerItem label="Sign Out" onPress={handleLogout} />
-
         <Text style={{ textAlign: 'center', marginBottom: 12, color: '#999' }}>
           © 2025 AgroRover
         </Text>
@@ -80,6 +82,13 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginBottom: 8,
   },
-  profileName: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-  roverId: { color: '#A5D6A7', fontSize: 14 },
+  profileName: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  roverId: {
+    color: '#A5D6A7',
+    fontSize: 14,
+  },
 });

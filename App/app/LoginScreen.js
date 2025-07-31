@@ -1,3 +1,4 @@
+import { SERVER_IP } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import {
@@ -8,11 +9,11 @@ import {
 } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
+const API_BASE_URL = `http://${SERVER_IP}:5000`;
 export default function LoginScreen({ navigation, setIsLoggedIn }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const API_BASE_URL = 'http://192.168.34.74:5000'; // apna backend IP yahan daalein
 
   const handleLogin = async () => {
     if (!email || !password) {

@@ -30,9 +30,9 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', captureRoutes);
 
-// Test route
+// Test route (Root Route)
 app.get('/', (req, res) => {
-  res.send('Backend is running');
+  res.send('Backend is running successfully!'); // A simple response
 });
 
 // Server start

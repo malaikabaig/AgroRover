@@ -1,10 +1,13 @@
+import { useNavigation } from '@react-navigation/native';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import HeaderBar from '../components/headerBar';
 
 export default function TermsServices() {
+  const navigation = useNavigation();
+
   return (
     <>
-      <HeaderBar title="Terms & Services" />
+      <HeaderBar title="Terms & Services" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.text}>
           These are the Terms and Services for using AgroRover.
