@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/splash-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.AGROROVER"
     },
     "web": {
       "favicon": "./assets/splash-icon.png"

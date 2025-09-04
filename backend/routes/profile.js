@@ -1,76 +1,73 @@
-require('dotenv').config(); // Import dotenv to use environment variables
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const jwt = require('jsonwebtoken'); // Import jwt for token verification
-const User = require('../models/User'); // Assuming your User model is in models folder
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Set storage engine for multer
+// ---------------- Multer Config ----------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Folder to store uploaded files
+    cb(null, path.join(__dirname, '..', 'uploads'));
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Naming the file
+    const ext = path.extname(file.originalname);
+    const uniqueName = `${Date.now()}${ext}`;
+    cb(null, uniqueName);
   },
 });
 
-// Initialize multer with the storage engine
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
-}).single('image'); // field name should match
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+});
 
-// Middleware to authenticate the user
-const authenticateToken = (req, res, next) => {
-  const token = req.header('Authorization');
-  if (!token) {
-    return res
-      .status(401)
-      .json({ message: 'Access denied, no token provided' });
-  }
+// ---------------- @route   GET /api/profile/me ----------------
+//         @desc    Get current logged-in user info
+//         @access  Private
+router.get('/me', authMiddleware, async (req, res) => {
+  const { email, username, roverId, avatarUrl } = req.user;
+  res.json({ email, username, roverId, avatarUrl });
+});
 
-  try {
-    // Decode the token and add user info to request
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // assuming the token contains user data
-    next(); // pass control to the next handler
-  } catch (error) {
-    return res.status(400).json({ message: 'Invalid token' });
-  }
-};
-
-// Profile image upload route
-router.post('/image', authenticateToken, upload, async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-
-  try {
-    // Fetch the user from the database using the ID from the token
-    const user = await User.findById(req.user.id); // The user ID is now coming from req.user
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+// ---------------- @route   POST /api/profile/image ----------------
+//         @desc    Upload avatar image
+//         @access  Private
+router.post(
+  '/image',
+  authMiddleware,
+  upload.single('image'),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' });
     }
 
-    // Update the user's avatar URL with the uploaded image URL
-    const serverIp = process.env.SERVER_IP || 'localhost'; // Use the SERVER_IP from .env or fallback to localhost
-    user.avatarUrl = `http://${serverIp}:${process.env.PORT}/uploads/${req.file.filename}`; // Update URL dynamically with the server IP
+    try {
+      const filename = req.file.filename;
+      const serverIp = process.env.SERVER_IP || 'localhost';
+      const port = process.env.PORT || '5001';
 
-    // Save the updated user object
-    await user.save();
+      const avatarUrl = `http://${serverIp}:${port}/uploads/${filename}`;
 
-    res.json({
-      message: 'Image uploaded successfully',
-      avatarUrl: user.avatarUrl,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error uploading image', error: error.message });
+      // Update user
+      const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { avatarUrl },
+        { new: true }
+      );
+
+      res.json({
+        message: 'Avatar updated successfully',
+        avatarUrl: user.avatarUrl,
+      });
+    } catch (err) {
+      console.error('Upload error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
   }
-});
+);
 
 module.exports = router;
