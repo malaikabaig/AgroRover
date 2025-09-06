@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import HeaderBar from '../components/headerBar';
 
-const NODE_BASE_URL = `http://${SERVER_IP}:5001`;
+const NODE_BASE_URL = SERVER_IP;
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(null); // { email, username, roverId, avatarUrl }

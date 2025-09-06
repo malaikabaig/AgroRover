@@ -1,161 +1,10 @@
-// // SignupScreen.js
-// import { SERVER_IP } from '@env';
-// import { AntDesign } from '@expo/vector-icons';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { useState } from 'react';
-// import {
-//   Alert,
-//   KeyboardAvoidingView,
-//   Platform,
-//   StyleSheet,
-//   View,
-// } from 'react-native';
-// import { Button, Text, TextInput } from 'react-native-paper';
-
-// const NODE_BASE_URL = `http://${SERVER_IP}:5001`;
-
-// export default function SignupScreen({ navigation, setIsLoggedIn }) {
-//   const [email, setEmail] = useState('');
-//   const [username, setUsername] = useState('');
-//   const [password, setPassword] = useState('');
-//   const [loading, setLoading] = useState(false);
-
-//   const handleSignup = async () => {
-//     if (!email || !password || !username) {
-//       Alert.alert('Error', 'Please fill email, username and password');
-//       return;
-//     }
-//     setLoading(true);
-//     try {
-//       const res = await fetch(`${NODE_BASE_URL}/api/auth/signup`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ email, password, username }),
-//       });
-//       const data = await res.json();
-
-//       if (res.ok) {
-//         await AsyncStorage.multiSet([
-//           ['token', data.token],
-//           ['email', data.user?.email || ''],
-//           ['username', data.user?.username || ''],
-//           ['name', data.user?.username || ''], // drawer uses this
-//           ['roverId', data.user?.roverId || ''],
-//           ['avatarUrl', data.user?.avatarUrl || ''],
-//         ]);
-//         setIsLoggedIn(true);
-//         navigation.navigate('MainApp');
-//       } else {
-//         Alert.alert(
-//           'Signup Failed',
-//           data.message || 'Unable to create account'
-//         );
-//       }
-//     } catch (err) {
-//       Alert.alert('Cannot Sign Up', 'Network error, try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleGoogleSignIn = () => {
-//     Alert.alert('Google Sign Up', 'This will be added soon!');
-//   };
-
-//   return (
-//     <KeyboardAvoidingView
-//       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-//       style={styles.container}
-//     >
-//       <Text style={styles.title}>Create AgroRover Account</Text>
-
-//       <TextInput
-//         label="Email"
-//         value={email}
-//         onChangeText={setEmail}
-//         autoCapitalize="none"
-//         keyboardType="email-address"
-//         style={styles.input}
-//         disabled={loading}
-//       />
-
-//       <TextInput
-//         label="Username"
-//         value={username}
-//         onChangeText={setUsername}
-//         autoCapitalize="none"
-//         style={styles.input}
-//         disabled={loading}
-//       />
-
-//       <TextInput
-//         label="Password"
-//         value={password}
-//         onChangeText={setPassword}
-//         secureTextEntry
-//         style={styles.input}
-//         disabled={loading}
-//       />
-
-//       <Button
-//         mode="contained"
-//         onPress={handleSignup}
-//         style={styles.button}
-//         loading={loading}
-//         disabled={loading}
-//       >
-//         Sign Up
-//       </Button>
-
-//       <Button
-//         onPress={() => navigation.goBack()}
-//         style={styles.link}
-//         disabled={loading}
-//       >
-//         Already have an account? Login
-//       </Button>
-
-//       <View style={styles.divider} />
-//       <Button
-//         icon={() => <AntDesign name="google" size={20} color="white" />}
-//         mode="contained"
-//         onPress={handleGoogleSignIn}
-//         style={styles.googleButton}
-//         labelStyle={{ fontWeight: 'bold' }}
-//         disabled={loading}
-//       >
-//         Sign up with Google
-//       </Button>
-//     </KeyboardAvoidingView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     padding: 20,
-//     backgroundColor: '#E8F5E9',
-//   },
-//   title: {
-//     fontSize: 24,
-//     marginBottom: 20,
-//     fontWeight: 'bold',
-//     color: '#2E7D32',
-//     textAlign: 'center',
-//   },
-//   input: { marginBottom: 15 },
-//   button: { marginTop: 10 },
-//   link: { marginTop: 10, textAlign: 'center' },
-//   divider: { height: 1, backgroundColor: '#ccc', marginVertical: 24 },
-//   googleButton: { backgroundColor: '#2E7D32', borderRadius: 6 },
-// });
-
 // app/SignupScreen.js
 import { SERVER_IP } from '@env';
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useMemo, useState } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -165,56 +14,79 @@ import {
 } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 
-const NODE_BASE_URL = `http://${SERVER_IP}:5001`;
+WebBrowser.maybeCompleteAuthSession();
+
+// ✅ Your .env has SERVER_IP with protocol+port, so use it directly.
+const NODE_BASE_URL = SERVER_IP;
 
 const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-const hasLower = /[a-z]/;
 const hasUpper = /[A-Z]/;
 const hasDigit = /\d/;
 const hasSpecial = /[^A-Za-z0-9]/;
 
 export default function SignupScreen({ navigation, setIsLoggedIn }) {
-  const [username, setUsername] = useState(''); // NEW
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const [touched, setTouched] = useState({
     username: false,
     email: false,
     password: false,
   });
-  const [loading, setLoading] = useState(false);
 
-  // ---------- validation ----------
+  // ✅ include both Expo + Android client IDs
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: process.env.GOOGLE_EXPO_CLIENT_ID,
+    androidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const finishGoogleSignup = async () => {
+        try {
+          const res = await fetch(`${NODE_BASE_URL}/api/auth/google/callback`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${response.authentication?.accessToken || ''}`,
+            },
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            const user = data.user || {};
+            await AsyncStorage.multiSet([
+              ['token', data.token || ''],
+              ['email', user.email || ''],
+              ['username', user.username || ''],
+              ['name', user.username || ''],
+              ['roverId', user.roverId || ''],
+              ['avatarUrl', user.avatarUrl || ''],
+            ]);
+            setIsLoggedIn(true);
+          } else {
+            Alert.alert('Google Signup Failed', data.message || 'Try again');
+          }
+        } catch (e) {
+          Alert.alert('Error', 'Network error during Google signup');
+        }
+      };
+      finishGoogleSignup();
+    }
+  }, [response, setIsLoggedIn]);
+
   const emailValid = useMemo(() => emailRegex.test(email), [email]);
 
-  // strength rules per your spec:
-  // - weak: only lowercase letters
-  // - moderate: letters + numbers (no special/caps required)
-  // - strong: letters + numbers + uppercase + special
+  // password strength text (same logic you had)
   const strength = useMemo(() => {
     if (!password) return 'none';
-    const onlyLower = password.length >= 1 && /^[a-z]+$/.test(password);
-    if (onlyLower) return 'weak';
-
-    const letters = /[A-Za-z]/.test(password);
-    if (
-      letters &&
-      hasDigit.test(password) &&
-      !(hasUpper.test(password) && hasSpecial.test(password))
-    ) {
+    if (/^[a-z]+$/.test(password)) return 'weak';
+    if (/[A-Za-z]/.test(password) && hasDigit.test(password)) {
+      if (hasUpper.test(password) && hasSpecial.test(password)) return 'strong';
       return 'moderate';
     }
-    if (
-      letters &&
-      hasDigit.test(password) &&
-      hasUpper.test(password) &&
-      hasSpecial.test(password)
-    ) {
-      return 'strong';
-    }
-    // agar match na ho to default moderate/weak ke beech
-    return hasDigit.test(password) ? 'moderate' : 'weak';
+    return 'weak';
   }, [password]);
 
   const canSubmit =
@@ -223,7 +95,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
     emailValid &&
     password.length >= 1;
 
-  // ---------- handlers ----------
   const handleSignup = async () => {
     if (!canSubmit) {
       Alert.alert(
@@ -237,40 +108,21 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
       const res = await fetch(`${NODE_BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // backend ko username bhi jaa raha hai
         body: JSON.stringify({ email, password, username }),
       });
 
-      const raw = await res.text();
-      let data;
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        throw new Error('Invalid server response');
-      }
+      const data = await res.json();
 
       if (res.ok) {
-        const user = data.user || {};
-        const safeEmail = user.email || email || '';
-        const safeUsername = user.username || username || '';
-        const safeRoverId = user.roverId || '';
-        const safeAvatar =
-          user.avatarUrl ||
-          (safeEmail
-            ? `https://i.pravatar.cc/100?u=${encodeURIComponent(safeEmail)}`
-            : '');
-
         await AsyncStorage.multiSet([
           ['token', data.token || ''],
-          ['email', safeEmail],
-          ['username', safeUsername],
-          ['name', safeUsername], // drawer/header isko read karta hai
-          ['roverId', safeRoverId],
-          ['avatarUrl', safeAvatar],
+          ['email', data.user?.email || ''],
+          ['username', data.user?.username || ''],
+          ['name', data.user?.username || ''],
+          ['roverId', data.user?.roverId || ''],
+          ['avatarUrl', data.user?.avatarUrl || ''],
         ]);
-
         setIsLoggedIn(true);
-        navigation.navigate('MainApp');
       } else {
         Alert.alert(
           'Signup Failed',
@@ -285,11 +137,9 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
   };
 
   const handleGoogleSignIn = () => {
-    Alert.alert('Google Sign In', 'This will be added soon!');
-    // TODO: expo-auth-session / Firebase Auth integrate here
+    promptAsync();
   };
 
-  // ---------- UI ----------
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -307,8 +157,23 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
         disabled={loading}
         onBlur={() => setTouched((t) => ({ ...t, username: true }))}
       />
-      <HelperText type={usernameValidType(username)} visible={touched.username}>
-        {usernameMessage(username)}
+      <HelperText
+        type={
+          !username
+            ? 'info'
+            : username.trim().length < 3 || username.trim().length > 10
+              ? 'error'
+              : 'info'
+        }
+        visible={touched.username}
+      >
+        {!username
+          ? '3–10 chars, no spaces'
+          : username.trim().length < 3
+            ? 'Too short (min 3)'
+            : username.trim().length > 10
+              ? 'Too long (max 10)'
+              : 'Looks good ✅'}
       </HelperText>
 
       {/* Email */}
@@ -338,7 +203,24 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
         onBlur={() => setTouched((t) => ({ ...t, password: true }))}
       />
       {password ? (
-        <PasswordStrength strength={strength} />
+        <Text
+          style={{
+            color:
+              strength === 'weak'
+                ? '#e53935'
+                : strength === 'moderate'
+                  ? '#fb8c00'
+                  : '#2E7D32',
+            marginTop: -8,
+            marginBottom: 8,
+          }}
+        >
+          {strength === 'weak'
+            ? 'Weak — only lowercase letters'
+            : strength === 'moderate'
+              ? 'Moderate — letters + numbers'
+              : 'Strong — includes UPPER + numbers + special'}
+        </Text>
       ) : (
         <HelperText type="info" visible>
           Tip: use Uppercase + numbers + special char for a strong password.
@@ -363,7 +245,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
         Already have an account? Login
       </Button>
 
-      {/* Divider + Google Sign In (green) */}
       <View style={styles.divider} />
       <Button
         icon={() => <AntDesign name="google" size={20} color="white" />}
@@ -379,41 +260,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
   );
 }
 
-/* ---------- Small helpers ---------- */
-function usernameValidType(username) {
-  if (!username) return 'info';
-  if (username.trim().length < 3) return 'error';
-  if (username.trim().length > 10) return 'error';
-  return 'info';
-}
-function usernameMessage(username) {
-  if (!username) return '3–10 chars, no spaces';
-  const len = username.trim().length;
-  if (len < 3) return 'Too short (min 3)';
-  if (len > 10) return 'Too long (max 10)';
-  return 'Looks good ✅';
-}
-
-function PasswordStrength({ strength }) {
-  let text = '';
-  let color = '#999';
-  if (strength === 'weak') {
-    text = 'Weak — only lowercase letters';
-    color = '#e53935';
-  } else if (strength === 'moderate') {
-    text = 'Moderate — letters + numbers';
-    color = '#fb8c00';
-  } else if (strength === 'strong') {
-    text = 'Strong — includes UPPER + numbers + special';
-    color = '#2E7D32';
-  } else {
-    text = '';
-  }
-  if (!text) return null;
-  return <Text style={{ color, marginTop: -8, marginBottom: 8 }}>{text}</Text>;
-}
-
-/* ---------- Styles ---------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

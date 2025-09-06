@@ -5,25 +5,48 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+
+    "scheme": "agrorover",
+
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agrorover.app"
     },
+
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/splash-icon.png",
-        "backgroundColor": "#ffffff"
-      },
+      "package": "com.agrorover.app",
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.AGROROVER"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
     },
+
     "web": {
-      "favicon": "./assets/splash-icon.png"
+      "favicon": "./assets/favicon.png"
+    },
+
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+
+    "extra": {
+      "eas": {
+        "projectId": "242ec28f-73d6-4ec5-b1d3-a570c85a3563"
+      }
     }
   }
 }

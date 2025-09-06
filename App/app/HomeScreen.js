@@ -81,7 +81,7 @@
 //   },
 // });
 
-import { PIURL } from '@env';
+import { PIURL, SERVER_IP } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, StyleSheet, View } from 'react-native';
 import { Button } from 'react-native-paper';
@@ -89,7 +89,7 @@ import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
 
 const API_BASE_URL = PIURL; // Flask server (Pi)
-const NODE_BASE_URL = 'http://10.0.2.2:5001'; // Node server (Laptop, emulator access)
+const NODE_BASE_URL = SERVER_IP;
 
 export default function HomeScreen() {
   const handleCapture = async () => {

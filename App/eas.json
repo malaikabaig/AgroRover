@@ -1,0 +1,21 @@
+{
+  "cli": {
+    "version": ">= 3.17.1"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "android": {
+        "gradleCommand": ":app:bundleRelease"
+      }
+    }
+  }
+}

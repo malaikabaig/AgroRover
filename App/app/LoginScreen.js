@@ -1,7 +1,10 @@
+// app/LoginScreen.js
 import { SERVER_IP } from '@env';
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -11,12 +14,65 @@ import {
 } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
-const NODE_BASE_URL = `http://${SERVER_IP}:5001`;
+WebBrowser.maybeCompleteAuthSession();
+
+const NODE_BASE_URL = SERVER_IP;
+console.log('NODE_BASE_URL =', NODE_BASE_URL);
 
 export default function LoginScreen({ setIsLoggedIn, navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  //  Include both Expo and Android client IDs
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: process.env.GOOGLE_EXPO_CLIENT_ID,
+    androidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const handleGoogleResponse = async () => {
+        try {
+          const res = await fetch(`${NODE_BASE_URL}/api/auth/google/callback`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${response.authentication?.accessToken || ''}`,
+            },
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            const user = data.user || {};
+            const safeEmail = user.email || '';
+            const safeUsername = user.username || '';
+            const safeRoverId = user.roverId || '';
+            const safeAvatar =
+              user.avatarUrl ||
+              (safeEmail
+                ? `https://i.pravatar.cc/100?u=${encodeURIComponent(safeEmail)}`
+                : '');
+
+            await AsyncStorage.multiSet([
+              ['token', data.token || ''],
+              ['email', safeEmail],
+              ['username', safeUsername],
+              ['name', safeUsername],
+              ['roverId', safeRoverId],
+              ['avatarUrl', safeAvatar],
+            ]);
+
+            setIsLoggedIn(true);
+          } else {
+            Alert.alert('Google Login Failed', data.message || 'Try again');
+          }
+        } catch (err) {
+          Alert.alert('Error', 'Network error during Google login');
+        }
+      };
+      handleGoogleResponse();
+    }
+  }, [response, setIsLoggedIn]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -59,13 +115,11 @@ export default function LoginScreen({ setIsLoggedIn, navigation }) {
         ['token', data.token || ''],
         ['email', safeEmail],
         ['username', safeUsername],
-        ['name', safeUsername], // drawer/profile read this
+        ['name', safeUsername],
         ['roverId', safeRoverId],
         ['avatarUrl', safeAvatar],
       ]);
 
-      // ❌ Do NOT navigate to 'MainApp' here (prevents "not handled by any navigator")
-      // Root navigator should switch on `isLoggedIn`.
       setIsLoggedIn(true);
     } catch (err) {
       Alert.alert('Error', 'Network error, try again.');
@@ -75,7 +129,7 @@ export default function LoginScreen({ setIsLoggedIn, navigation }) {
   };
 
   const handleGoogleSignIn = () => {
-    Alert.alert('Google Sign In', 'This will be added soon!');
+    promptAsync();
   };
 
   return (
