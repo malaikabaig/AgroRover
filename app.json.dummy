@@ -9,7 +9,7 @@
     "scheme": "agrorover",
 
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-icron.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

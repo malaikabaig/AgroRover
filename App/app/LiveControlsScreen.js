@@ -186,7 +186,6 @@
 //   btnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 // });
 
-import { PIURL } from '@env';
 import { useState } from 'react';
 import {
   Animated,
@@ -199,6 +198,7 @@ import {
 import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
 import Joystick from '../components/Joystick';
+import { PIURL } from './config';
 
 const API_BASE_URL = PIURL;
 const { width, height } = Dimensions.get('window');

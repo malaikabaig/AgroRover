@@ -202,7 +202,7 @@
 //   },
 // });
 
-import { ROVER_IP, SERVER_IP } from '@env';
+// app/ProfileScreen.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
@@ -220,6 +220,7 @@ import {
   View,
 } from 'react-native';
 import HeaderBar from '../components/headerBar';
+import { ROVER_IP, SERVER_IP } from './config';
 
 const NODE_BASE_URL = (SERVER_IP || '').replace(/\/+$/, ''); // your main API (profile/avatar)
 const ROVER_BASE_URL = (ROVER_IP || '').replace(/\/+$/, '') || NODE_BASE_URL; // rover Flask API (wifi endpoints)
@@ -232,8 +233,7 @@ export default function ProfileScreen({ navigation }) {
   const [uploading, setUploading] = useState(false);
 
   // ---- Wi-Fi state ----
-  const [wifiLoading, setWifiLoading] = useState(false);
-  const [networks, setNetworks] = useState([]);
+  const [networks, setNetworks] = useState([]); // (kept for future)
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [connecting, setConnecting] = useState(false);
@@ -341,7 +341,6 @@ export default function ProfileScreen({ navigation }) {
       if (!res.ok || data.ok === false || data.status === 'failed') {
         throw new Error(data.error || 'connect_failed');
       }
-      // success → poll status
       setWifiStatus(`Connected to ${data.ssid}`);
       Alert.alert('Success', `Rover connected to ${data.ssid}`);
     } catch (e) {
@@ -352,19 +351,10 @@ export default function ProfileScreen({ navigation }) {
       );
     } finally {
       setConnecting(false);
-      // Reset wifiStatus after a certain delay
-      setTimeout(() => {
-        setWifiStatus(''); // Clear the status after 5 seconds
-      }, 5000);
+      setTimeout(() => setWifiStatus(''), 5000);
     }
   };
 
-  // Auto-load nearby networks when entering the screen
-  useEffect(() => {
-    // Removed the scan function as you requested
-  }, []);
-
-  // ------------------- UI -------------------
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -376,10 +366,18 @@ export default function ProfileScreen({ navigation }) {
   return (
     <>
       <HeaderBar title="Profile" onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.container}>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
+      >
         {/* -------- Profile Card -------- */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Your Profile</Text>
+
           <Text style={styles.label}>Username</Text>
           <Text style={styles.value}>{profile?.username || '-'}</Text>
 
@@ -423,6 +421,7 @@ export default function ProfileScreen({ navigation }) {
               placeholder="Select from list or type SSID"
               placeholderTextColor="#9E9E9E"
               style={styles.input}
+              autoCapitalize="none"
             />
           </View>
 
@@ -468,7 +467,16 @@ const BG_CARD = '#FFFFFF';
 const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center' },
 
-  container: { flex: 1, padding: 16, backgroundColor: '#F7F9FB', gap: 16 },
+  // ScrollView frame
+  scroll: { flex: 1, backgroundColor: '#F7F9FB' },
+
+  // Allow content to grow (do NOT lock to viewport height)
+  container: {
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: '#F7F9FB',
+  },
 
   card: {
     backgroundColor: BG_CARD,
@@ -481,6 +489,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
+    marginBottom: 16, // spacing between cards (instead of 'gap' on container)
   },
 
   sectionTitle: {

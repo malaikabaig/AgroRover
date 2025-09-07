@@ -190,7 +190,7 @@
 //   empty: { textAlign: 'center', marginTop: 32, color: '#666' },
 // });
 // app/ImagesScreen.js
-import { SERVER_IP } from '@env';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -208,7 +208,9 @@ import {
 import { IconButton } from 'react-native-paper';
 import HeaderBar from '../components/headerBar';
 
-const NODE_BASE_URL = (SERVER_IP || '').replace(/\/+$/, '');
+import { SERVER_IP } from './config';
+
+const NODE_BASE_URL = SERVER_IP;
 
 export default function ImagesScreen() {
   const [images, setImages] = useState([]);

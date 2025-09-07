@@ -1,4 +1,7 @@
+// navigation/drawerNavigator.js
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import AboutUs from '../app/AboutUs';
 import ContactUs from '../app/ContactUs';
 import LiveControlsScreen from '../app/LiveControlsScreen';
@@ -16,11 +19,19 @@ export default function DrawerNavigator({ setIsLoggedIn }) {
     <Drawer.Navigator
       initialRouteName="HomeTabs"
       drawerContent={(props) => (
-        <CustomDrawerContent {...props} setIsLoggedIn={setIsLoggedIn} />
+        <SafeAreaView
+          edges={['top', 'bottom', 'left', 'right']}
+          style={{ flex: 1 }}
+        >
+          <CustomDrawerContent {...props} setIsLoggedIn={setIsLoggedIn} />
+        </SafeAreaView>
       )}
       screenOptions={{ headerShown: false }}
     >
+      {/* Tabs (bottom tabs) – navigator: non-scrollable handled by App.js wrapper */}
       <Drawer.Screen name="HomeTabs" component={Tabs} />
+
+      {/* Content screens – safe area & responsiveness already handled by App.js wrapper */}
       <Drawer.Screen name="Prof" component={ProfileScreen} />
       <Drawer.Screen
         name="LiveControlsSettings"

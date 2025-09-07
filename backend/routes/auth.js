@@ -1,15 +1,13 @@
-// backend/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Your Android/iOS Client ID
 
 const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secretkey';
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5001';
 
 /* =========================
    Signup
@@ -89,64 +87,49 @@ router.post('/login', async (req, res) => {
   }
 });
 
-//Google OAuth (Passport)
+/* =========================
+   Google OAuth (Mobile) - id_token verification
+   ========================= */
+router.post('/google/mobile', async (req, res) => {
+  const { id_token } = req.body;
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID, // Web client ID
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Web client secret
-      callbackURL: `${BASE_URL}/api/auth/google/callback`, // absolute (local / prod)
-    },
-    async (_accessToken, _refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) return done(new Error('No email from Google'), null);
+  try {
+    // Verify the Google ID token with Google's API
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID, // Your Android/iOS Client ID
+    });
 
-        let user = await User.findOne({ email });
-        if (!user) {
-          user = await User.create({
-            email,
-            username:
-              profile.displayName?.replace(/\s+/g, '').toLowerCase() ||
-              email.split('@')[0],
-            // dummy password — your model should hash on save
-            password: bcrypt.hashSync(Math.random().toString(36), 10),
-            avatarUrl: profile.photos?.[0]?.value,
-          });
-        }
-        return done(null, user);
-      } catch (err) {
-        return done(err, null);
-      }
+    const payload = ticket.getPayload();
+    const email = payload.email;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        email,
+        username: email.split('@')[0],
+        password: bcrypt.hashSync(Math.random().toString(36), 10), // Dummy password
+        avatarUrl: payload.picture,
+      });
     }
-  )
-);
 
-// Start Google login
-router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// OAuth callback → issue JWT and return JSON (you can redirect if you want)
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { session: false }),
-  (req, res) => {
-    const token = jwt.sign({ id: req.user._id }, JWT_SECRET, {
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
+
     return res.json({
       token,
       user: {
-        email: req.user.email,
-        username: req.user.username,
-        roverId: req.user.roverId,
-        avatarUrl: req.user.avatarUrl,
+        email: user.email,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
       },
     });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    return res.status(400).json({ error: 'Google login failed' });
   }
-);
+});
 
 module.exports = router;

@@ -1,5 +1,4 @@
 // app/LoginScreen.js
-import { SERVER_IP } from '@env';
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Google from 'expo-auth-session/providers/google';
@@ -13,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
+import { SERVER_IP } from './config';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -34,7 +34,7 @@ export default function LoginScreen({ setIsLoggedIn, navigation }) {
     if (response?.type === 'success') {
       const handleGoogleResponse = async () => {
         try {
-          const res = await fetch(`${NODE_BASE_URL}/api/auth/google/callback`, {
+          const res = await fetch(`${NODE_BASE_URL}/api/auth/google/mobile`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${response.authentication?.accessToken || ''}`,
