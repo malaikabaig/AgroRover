@@ -1,22 +1,14 @@
-// app/SignupScreen.js
-import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  View,
 } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { SERVER_IP } from './config';
 
-WebBrowser.maybeCompleteAuthSession();
-
-// ✅ Your .env has SERVER_IP with protocol+port, so use it directly.
 const NODE_BASE_URL = SERVER_IP;
 
 const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -35,46 +27,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
     email: false,
     password: false,
   });
-
-  // ✅ include both Expo + Android client IDs
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: process.env.GOOGLE_EXPO_CLIENT_ID,
-    androidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const finishGoogleSignup = async () => {
-        try {
-          const res = await fetch(`${NODE_BASE_URL}/api/auth/google/mobile`, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${response.authentication?.accessToken || ''}`,
-            },
-          });
-
-          const data = await res.json();
-          if (res.ok) {
-            const user = data.user || {};
-            await AsyncStorage.multiSet([
-              ['token', data.token || ''],
-              ['email', user.email || ''],
-              ['username', user.username || ''],
-              ['name', user.username || ''],
-              ['roverId', user.roverId || ''],
-              ['avatarUrl', user.avatarUrl || ''],
-            ]);
-            setIsLoggedIn(true);
-          } else {
-            Alert.alert('Google Signup Failed', data.message || 'Try again');
-          }
-        } catch (e) {
-          Alert.alert('Error', 'Network error during Google signup');
-        }
-      };
-      finishGoogleSignup();
-    }
-  }, [response, setIsLoggedIn]);
 
   const emailValid = useMemo(() => emailRegex.test(email), [email]);
 
@@ -134,10 +86,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSignIn = () => {
-    promptAsync();
   };
 
   return (
@@ -244,18 +192,6 @@ export default function SignupScreen({ navigation, setIsLoggedIn }) {
       >
         Already have an account? Login
       </Button>
-
-      <View style={styles.divider} />
-      <Button
-        icon={() => <AntDesign name="google" size={20} color="white" />}
-        mode="contained"
-        onPress={handleGoogleSignIn}
-        style={styles.googleButton}
-        labelStyle={{ fontWeight: 'bold' }}
-        disabled={loading}
-      >
-        Sign up with Google
-      </Button>
     </KeyboardAvoidingView>
   );
 }
@@ -277,6 +213,4 @@ const styles = StyleSheet.create({
   input: { marginBottom: 8 },
   button: { marginTop: 10 },
   link: { marginTop: 10, textAlign: 'center' },
-  divider: { height: 1, backgroundColor: '#ccc', marginVertical: 24 },
-  googleButton: { backgroundColor: '#2E7D32', borderRadius: 6 },
 });
