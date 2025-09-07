@@ -123,7 +123,7 @@
 // });
 
 // module.exports = router;
-
+// backend/routes/captureRoute.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -202,9 +202,10 @@ router.post(
         success: true,
         image: {
           id: newImage._id,
+          _id: newImage._id,
           url: newImage.url,
           user: newImage.user,
-          public_id: newImage.public_id, // Include the public_id in response
+          public_id: newImage.public_id,
           width: uploaded.width,
           height: uploaded.height,
           format: uploaded.format,
@@ -247,34 +248,139 @@ router.get('/my-images', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/images/:id
+/**
+ * DELETE /api/images/:id
+ */
 router.delete('/images/:id', authMiddleware, async (req, res) => {
   try {
-    const image = await Image.findById(req.params.id);
+    const id = req.params.id;
+    console.log('[DELETE] /api/images/:id ->', id);
+
+    const image = await Image.findById(id);
     if (!image) {
+      console.warn('[DELETE] not found in DB:', id);
       return res.status(404).json({ success: false, error: 'Image not found' });
     }
 
-    // Delete the image from Cloudinary using the public_id
-    const cloudinaryResponse = await cloudinary.uploader.destroy(
-      image.public_id
-    );
+    if (!image.public_id) {
+      console.error('[DELETE] missing public_id for', id);
+      return res
+        .status(500)
+        .json({ success: false, error: 'Missing public_id' });
+    }
 
-    // If the deletion from Cloudinary was successful, remove the record from DB
-    if (cloudinaryResponse.result === 'ok') {
-      await image.remove();
-      return res.json({ success: true, message: 'Image deleted successfully' });
-    } else {
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to delete image from Cloudinary',
+    console.log('[DELETE] destroying on Cloudinary ->', image.public_id);
+    const cloudinaryResponse = await cloudinary.uploader.destroy(
+      image.public_id,
+      {
+        invalidate: true,
+        resource_type: 'image',
+        type: 'upload',
+      }
+    );
+    console.log('[DELETE] Cloudinary response:', cloudinaryResponse);
+
+    const result = String(cloudinaryResponse?.result || '');
+    // Treat both 'ok' and 'not found' as success (idempotent delete)
+    if (result === 'ok' || result === 'not found') {
+      await Image.deleteOne({ _id: image._id }); // modern Mongoose
+      return res.json({
+        success: true,
+        id: image._id,
+        message:
+          result === 'ok'
+            ? 'Image deleted'
+            : 'Image already missing on Cloudinary; removed from DB',
       });
     }
+
+    return res.status(502).json({
+      success: false,
+      error: `Cloudinary delete failed: ${result}`,
+      details: cloudinaryResponse,
+    });
   } catch (err) {
-    console.error('Error deleting image:', err);
+    console.error('[DELETE] error:', err);
     return res
       .status(500)
       .json({ success: false, error: 'Failed to delete image' });
+  }
+});
+
+// GET /api/images/:id/analyze
+router.get('/images/:id/analyze', authMiddleware, async (req, res) => {
+  try {
+    // url + public_id dono le lo (old records ke liye)
+    const img = await Image.findById(req.params.id).select('url public_id');
+    if (!img) {
+      return res.status(404).json({ success: false, error: 'Image not found' });
+    }
+
+    // 1) primary: stored secure_url
+    let imageUrl = img.url;
+
+    // 2) fallback: build from public_id if url missing/invalid
+    const looksPublic = (u) => typeof u === 'string' && /^https?:\/\//i.test(u);
+    if (!looksPublic(imageUrl) && img.public_id) {
+      // Cloudinary SDK se secure delivery URL; extensionless works
+      imageUrl = cloudinary.url(img.public_id, {
+        secure: true,
+        resource_type: 'image',
+        type: 'upload',
+      });
+    }
+
+    if (!looksPublic(imageUrl)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Image URL is not publicly accessible',
+      });
+    }
+
+    const endpoint =
+      `${process.env.ROBOFLOW_MODEL_URL}` +
+      `?api_key=${process.env.ROBOFLOW_API_KEY}` +
+      `&image=${encodeURIComponent(imageUrl)}` +
+      `&confidence=0.5&overlap=0.5`;
+
+    console.log(
+      '[analyze] calling RF:',
+      endpoint.replace(/api_key=[^&]+/, 'api_key=***')
+    );
+
+    const rfRes = await fetch(endpoint, { method: 'GET' });
+    let data;
+    try {
+      data = await rfRes.json();
+    } catch {
+      data = null;
+    }
+
+    if (!rfRes.ok) {
+      console.error('[analyze] RF status:', rfRes.status, 'body:', data);
+      return res.status(502).json({
+        success: false,
+        error: `Inference failed (${rfRes.status})`,
+        details: data || null,
+      });
+    }
+
+    const detections = (data?.predictions || []).map((p) => ({
+      label: p.class,
+      conf: p.confidence,
+      x: p.x,
+      y: p.y,
+      w: p.width,
+      h: p.height,
+      id: p.detection_id,
+    }));
+
+    return res.json({ success: true, detections });
+  } catch (e) {
+    console.error('[analyze] error:', e);
+    return res
+      .status(500)
+      .json({ success: false, error: 'Analyze failed', details: e.message });
   }
 });
 
