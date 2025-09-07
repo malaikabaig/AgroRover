@@ -1,4 +1,3 @@
-// navigation/drawerNavigator.js
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,7 +19,7 @@ export default function DrawerNavigator({ setIsLoggedIn }) {
       initialRouteName="HomeTabs"
       drawerContent={(props) => (
         <SafeAreaView
-          edges={['top', 'bottom', 'left', 'right']}
+          edges={['bottom', 'left', 'right']} // Removed 'top' to eliminate the top space
           style={{ flex: 1 }}
         >
           <CustomDrawerContent {...props} setIsLoggedIn={setIsLoggedIn} />

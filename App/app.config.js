@@ -1,6 +1,6 @@
 // app.config.js
 import 'dotenv/config';
-console.log('[CONFIG] SERVER_IP =', process.env.SERVER_IP);
+
 export default {
   expo: {
     name: 'AGROROVER',
@@ -28,7 +28,7 @@ export default {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
-      // Play Store ke liye har release pe isko +1 karo
+
       versionCode: 1,
     },
 

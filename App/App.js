@@ -1,5 +1,6 @@
-// App.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import {
@@ -15,10 +16,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import LoginScreen from './app/LoginScreen';
 import SignupScreen from './app/SignupScreen';
 import DrawerNavigator from './navigation/drawerNavigator';
@@ -35,8 +32,8 @@ function ScreenWrapper({ children, scrollable = true }) {
       style={{
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
+        paddingTop: insets.top / 2, // Reduced top padding
+        paddingBottom: insets.bottom / 2, // Reduced bottom padding
       }}
       edges={['top', 'left', 'right', 'bottom']}
     >
@@ -48,7 +45,7 @@ function ScreenWrapper({ children, scrollable = true }) {
           style={{ flex: 1 }}
           contentContainerStyle={
             scrollable
-              ? { flexGrow: 1, paddingHorizontal: 16, paddingVertical: 18 }
+              ? { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 20 } // Reduced vertical padding for a tighter layout
               : undefined
           }
           keyboardShouldPersistTaps="handled"
@@ -60,7 +57,7 @@ function ScreenWrapper({ children, scrollable = true }) {
   );
 }
 
-// splash ko auto-hide mat hone do jab tak hum ready na ho jayen
+// Prevent splash screen from auto-hiding until we're ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
@@ -83,7 +80,7 @@ export default function App() {
   }, []);
 
   if (isLoggedIn === null) {
-    // NOTE: Splash abhi visible hai; yahan kuch render bhi kar do to chalega
+    // NOTE: Splash is still visible; render a loading screen while checking token
     return (
       <SafeAreaProvider>
         <PaperProvider>
@@ -127,7 +124,7 @@ export default function App() {
             ) : (
               <Stack.Screen name="MainApp">
                 {(props) => (
-                  // Navigators ko non-scrollable wrapper (wo apni scroll khud manage karte hain)
+                  // Navigators handle their own scrolling, so use non-scrollable wrapper
                   <ScreenWrapper scrollable={false}>
                     <DrawerNavigator {...props} setIsLoggedIn={setIsLoggedIn} />
                   </ScreenWrapper>
