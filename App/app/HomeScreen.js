@@ -86,11 +86,11 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { Button } from 'react-native-paper';
 import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
-import { PIURL, SERVER_IP } from './config';
+import { PI_URL, SERVER_IP } from './config';
 
-const API_BASE_URL = PIURL;
+const API_BASE_URL = PI_URL;
 const NODE_BASE_URL = SERVER_IP;
-
+console.log('API_BASE_URL:', API_BASE_URL);
 export default function HomeScreen() {
   const handleCapture = async () => {
     try {

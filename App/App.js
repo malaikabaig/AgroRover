@@ -33,7 +33,7 @@ function ScreenWrapper({ children, scrollable = true }) {
         flex: 1,
         backgroundColor: '#fff',
         paddingTop: insets.top / 2, // Reduced top padding
-        paddingBottom: insets.bottom / 2, // Reduced bottom padding
+        paddingBottom: 0, // Remove bottom padding for a tighter layout
       }}
       edges={['top', 'left', 'right', 'bottom']}
     >

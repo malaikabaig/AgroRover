@@ -198,9 +198,9 @@ import {
 import { WebView } from 'react-native-webview';
 import HeaderBar from '../components/headerBar';
 import Joystick from '../components/Joystick';
-import { PIURL } from './config';
+import { PI_URL } from './config';
 
-const API_BASE_URL = PIURL;
+const API_BASE_URL = PI_URL;
 const { width, height } = Dimensions.get('window');
 
 export default function LiveControlsScreen({ navigation }) {

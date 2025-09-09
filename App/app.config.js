@@ -1,6 +1,6 @@
 // app.config.js
 import 'dotenv/config';
-
+console.log('PI_URL:', process.env.PIURL);
 export default {
   expo: {
     name: 'AGROROVER',
@@ -22,7 +22,7 @@ export default {
     },
 
     android: {
-      package: 'com.anonymous.AGROROVER',
+      package: 'com.agrorover.app',
       edgeToEdgeEnabled: true,
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',

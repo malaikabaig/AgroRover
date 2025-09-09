@@ -18,10 +18,7 @@ export default function DrawerNavigator({ setIsLoggedIn }) {
     <Drawer.Navigator
       initialRouteName="HomeTabs"
       drawerContent={(props) => (
-        <SafeAreaView
-          edges={['bottom', 'left', 'right']} // Removed 'top' to eliminate the top space
-          style={{ flex: 1 }}
-        >
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1 }}>
           <CustomDrawerContent {...props} setIsLoggedIn={setIsLoggedIn} />
         </SafeAreaView>
       )}
